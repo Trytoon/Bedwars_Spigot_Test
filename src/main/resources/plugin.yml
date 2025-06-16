@@ -1,0 +1,10 @@
+name: Bedwars
+version: 1.0
+main: fr.trytoon.bedwars.BedwarsPlugin
+commands:
+  start:
+    description: Start the game after 10s.
+    usage: /start
+  team:
+    description: Create or add a team. Can also get all teams.
+    usage: /team <add|list|remove>
