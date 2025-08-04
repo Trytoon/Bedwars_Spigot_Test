@@ -1,10 +1,7 @@
 package fr.trytoon.bedwars.commands;
 
-import fr.trytoon.bedwars.events.TeamCreatedEvent;
-import fr.trytoon.bedwars.events.TeamRemovedEvent;
 import fr.trytoon.bedwars.teams.BedwarsTeam;
 import fr.trytoon.bedwars.teams.TeamManager;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -42,8 +39,8 @@ public class TeamCommand implements CommandExecutor {
 
         Collection<BedwarsTeam> bedwarsTeams = teamManager.getTeams().values();
 
-        if (bedwarsTeams.size() == 0) {
-            sender.sendMessage("[BEDWARS]" + ChatColor.RED +"No team defined.");
+        if (bedwarsTeams.isEmpty()) {
+            sender.sendMessage("[BEDWARS]" + ChatColor.RED +"Aucune équipe définie.");
         }
 
         for (BedwarsTeam bedwarsTeam : bedwarsTeams) {
@@ -59,19 +56,18 @@ public class TeamCommand implements CommandExecutor {
             return false;
         }
 
-        BedwarsTeam bedwarsTeam = teamManager.getTeam(args[1]);
+        BedwarsTeam bedwarsTeam = teamManager.getTeamByName(args[1]);
 
         if (bedwarsTeam == null) {
-            sender.sendMessage("[BEDWARS]" + ChatColor.RED + "The team" + args[1] + " doesn't exist.");
+            sender.sendMessage("[BEDWARS]" + ChatColor.RED + "L'équipe" + args[1] + " n'existe pas.");
         }
         else {
             boolean success = teamManager.deleteTeam(bedwarsTeam.getName());
+
             if (!success) {
-                sender.sendMessage("[BEDWARS]" + ChatColor.RED + "Impossible to delete team " + bedwarsTeam.getName());
+                sender.sendMessage("[BEDWARS]" + ChatColor.RED + "Impossible de supprimer l'équipe " + bedwarsTeam.getName());
             } else {
-                sender.sendMessage("[BEDWARS]" + " Successfully deleted team: "+ bedwarsTeam.getTeamColor().getChatColor() + bedwarsTeam.getName());
-                TeamRemovedEvent teamRemovedEvent = new TeamRemovedEvent();
-                Bukkit.getServer().getPluginManager().callEvent(teamRemovedEvent);
+                sender.sendMessage("[BEDWARS]" + " Equipe supprimée avec succès: "+ bedwarsTeam.getTeamColor().getChatColor() + bedwarsTeam.getName());
             }
         }
 
@@ -81,8 +77,8 @@ public class TeamCommand implements CommandExecutor {
     private boolean createTeam(CommandSender sender, String[] args) {
         String teamName = args[1];
 
-        if (teamManager.getTeam(teamName) != null) {
-            sender.sendMessage("[BEDWARS]" + " Error when trying to create team: " + teamName + ". Team already exists !");
+        if (teamManager.getTeamByName(teamName) != null) {
+            sender.sendMessage("[BEDWARS]" + " Erreur en créant l'équipe: " + teamName + ". Equipe deja existante !");
         }
 
         if (sender instanceof Player) {
@@ -90,8 +86,8 @@ public class TeamCommand implements CommandExecutor {
                 return false;
             }
 
-
             int members;
+
             try {
                 members = Integer.parseInt(args[2]);
             } catch (Exception e) {
@@ -103,13 +99,12 @@ public class TeamCommand implements CommandExecutor {
             Location spawnLocation = player.getLocation();
 
             boolean success = teamManager.createTeam(teamName, members, spawnLocation);
+
             if (success) {
-                sender.sendMessage("[BEDWARS]" + " Successfully created team: " + teamName);
-                TeamCreatedEvent teamCreatedEvent = new TeamCreatedEvent();
-                Bukkit.getServer().getPluginManager().callEvent(teamCreatedEvent);
+                sender.sendMessage("[BEDWARS]" + " Equipe créée avec succes: " + teamName);
             }
             else {
-                sender.sendMessage("[BEDWARS]" + " Error when trying to create team: " + teamName);
+                sender.sendMessage("[BEDWARS]" + " Erreur en créant l'équipe: " + teamName);
             }
         }
 

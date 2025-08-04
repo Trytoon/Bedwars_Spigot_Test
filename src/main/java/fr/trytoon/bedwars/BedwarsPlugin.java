@@ -1,14 +1,20 @@
 package fr.trytoon.bedwars;
 
 import de.tr7zw.changeme.nbtapi.NBT;
-
 import fr.trytoon.bedwars.commands.CommandManager;
 import fr.trytoon.bedwars.game.GameManager;
-import fr.trytoon.bedwars.inventory.TeamSelectorInventory;
+import fr.trytoon.bedwars.inventory.InventoryManager;
+import fr.trytoon.bedwars.inventory.listeners.InventoryListener;
 import fr.trytoon.bedwars.items.GeneratorManager;
 import fr.trytoon.bedwars.player.PlayerManager;
+import fr.trytoon.bedwars.player.PlayerRespawnManager;
+import fr.trytoon.bedwars.player.listeners.PlayerListener;
 import fr.trytoon.bedwars.scoreboard.BedwarsScoreboardManager;
+import fr.trytoon.bedwars.scoreboard.ScoreboardProvider;
+import fr.trytoon.bedwars.scoreboard.listeners.ScoreboardListener;
 import fr.trytoon.bedwars.teams.TeamManager;
+import fr.trytoon.bedwars.teams.listeners.TeamListener;
+import fr.trytoon.bedwars.world.listeners.WorldEventsListener;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -19,16 +25,18 @@ import java.io.File;
 import java.io.IOException;
 
 public class BedwarsPlugin extends JavaPlugin {
-    GameManager gameManager;
 
-    PlayerManager playerManager;
+    private  GameManager gameManager;
+    private PlayerManager playerManager;
+    private PlayerRespawnManager respawnManager;
 
-    TeamManager teamManager;
-    CommandManager commandManager;
+    private TeamManager teamManager;
+    private CommandManager commandManager;
+    private BedwarsScoreboardManager scoreboardManager;
+    private GeneratorManager generatorManager;
+    private InventoryManager inventoryManager;
 
-    BedwarsScoreboardManager scoreboardManager;
-
-    GeneratorManager generatorManager;
+    private ScoreboardProvider scoreboardProvider;
 
     @Override
     public void onEnable() {
@@ -38,33 +46,38 @@ public class BedwarsPlugin extends JavaPlugin {
             return;
         }
 
-        getLogger().info("[BEDWARS] plugin enable");
+        getLogger().info("[BEDWARS] Plugin enable");
 
         gameManager = new GameManager(this);
-
         playerManager = new PlayerManager(this);
-
+        respawnManager = new PlayerRespawnManager(this);
         teamManager = new TeamManager(this);
-        teamManager.loadTeams();
-
-        commandManager = new CommandManager(this);
-        commandManager.registerCommands();
-
         scoreboardManager = new BedwarsScoreboardManager(this);
-
-        getServer().getPluginManager().registerEvents(playerManager, this);
-        getServer().getPluginManager().registerEvents(teamManager, this);
-        getServer().getPluginManager().registerEvents(new TeamSelectorInventory(teamManager), this);
-
-        getServer().getPluginManager().registerEvents(scoreboardManager, this);
-
         generatorManager = new GeneratorManager(this);
+        inventoryManager = new InventoryManager(this);
+        commandManager = new CommandManager(this);
 
+        scoreboardProvider = new ScoreboardProvider(teamManager, playerManager);
+
+        registerListeners();
     }
 
     @Override
     public void onDisable() {
-        getLogger().info("[BEDWARS] plugin disable");
+        getLogger().info("[BEDWARS] Plugin disabled");
+    }
+
+    @Override
+    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
+        return commandManager.onCommand(sender, cmd, label, args);
+    }
+
+    private void registerListeners() {
+        getServer().getPluginManager().registerEvents(new PlayerListener(playerManager, gameManager, respawnManager, teamManager), this);
+        getServer().getPluginManager().registerEvents(new WorldEventsListener(gameManager, teamManager, playerManager), this);
+        getServer().getPluginManager().registerEvents(new TeamListener(teamManager), this);
+        getServer().getPluginManager().registerEvents(new InventoryListener(teamManager, playerManager, inventoryManager), this);
+        getServer().getPluginManager().registerEvents(new ScoreboardListener(scoreboardManager, scoreboardProvider, gameManager), this);
     }
 
     public File getConfigurationFileFromPath(String path) {
@@ -75,28 +88,22 @@ public class BedwarsPlugin extends JavaPlugin {
         File file = new File(getDataFolder(), filePath);
 
         if (!file.exists()) {
-            getLogger().warning("[BEDWARS] Creating " + filePath + " as it does not exist.");
+            getLogger().warning("[BEDWARS] Création de " + filePath + " car le fichier n'existe pas.");
 
             try {
                 if (getResource(filePath) != null) {
                     saveResource(filePath, false);
                 } else {
                     file.createNewFile();
-                    getLogger().info("[BEDWARS] Created a new empty file: " + filePath);
+                    getLogger().info("[BEDWARS] Création d'un nouveau fichier vide : " + filePath);
                 }
             } catch (IOException e) {
-                getLogger().severe("[BEDWARS] Failed to create or save the file: " + filePath);
+                getLogger().severe("[BEDWARS] Échec de la création ou de la sauvegarde du fichier : " + filePath);
                 e.printStackTrace();
             }
         }
 
         return YamlConfiguration.loadConfiguration(file);
-    }
-
-
-    @Override
-    public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        return commandManager.onCommand(sender, cmd, label, args);
     }
 
     public TeamManager getTeamManager() {

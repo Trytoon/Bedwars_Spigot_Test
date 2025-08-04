@@ -1,14 +1,14 @@
 package fr.trytoon.bedwars.teams;
 
+import fr.trytoon.bedwars.player.BedwarsPlayer;
 import org.bukkit.Location;
-import org.bukkit.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class BedwarsTeam {
     private final String name;
-    private final List<Player> players;
+    private final List<BedwarsPlayer> players;
     private final int maxMembers;
 
     private int deadMembers;
@@ -18,7 +18,6 @@ public class BedwarsTeam {
 
     private final TeamColor teamColor;
     boolean isBedBroken;
-
 
     public BedwarsTeam(String name, Location spawn, Location bedPosition, int maxMembers, TeamColor teamColor) {
         this.name = name;
@@ -32,12 +31,12 @@ public class BedwarsTeam {
         this.deadMembers = 0;
     }
 
-    public void addToTeam(Player p) {
-        this.players.add(p);
+    public void addToTeam(BedwarsPlayer player) {
+        this.players.add(player);
     }
 
-    public void removeFromTeam(Player p) {
-        this.players.remove(p);
+    public void removeFromTeam(BedwarsPlayer player) {
+        this.players.remove(player);
 
     }
 
@@ -45,7 +44,7 @@ public class BedwarsTeam {
         return name;
     }
 
-    public List<Player> getPlayers() {
+    public List<BedwarsPlayer> getPlayers() {
         return players;
     }
 
@@ -77,7 +76,7 @@ public class BedwarsTeam {
         isBedBroken = bedBroken;
     }
 
-    public boolean hasPlayer(Player player) {
+    public boolean hasPlayer(BedwarsPlayer player) {
         return getPlayers().contains(player);
     }
 
@@ -94,7 +93,7 @@ public class BedwarsTeam {
         return deadMembers;
     }
 
-    public void setDeadMembers(int deadMembers) {
-        this.deadMembers = deadMembers;
+    public void incrementDeadPlayers() {
+        this.deadMembers += 1;
     }
 }

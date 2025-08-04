@@ -1,18 +1,12 @@
 package fr.trytoon.bedwars.inventory;
 
-import fr.trytoon.bedwars.events.PlayerTeamJoinEvent;
-import fr.trytoon.bedwars.events.PlayerTeamSelectEvent;
-import fr.trytoon.bedwars.events.TeamCreatedEvent;
-import fr.trytoon.bedwars.events.TeamRemovedEvent;
+import fr.trytoon.bedwars.events.PlayerTeamChangeEvent;
+import fr.trytoon.bedwars.player.BedwarsPlayer;
 import fr.trytoon.bedwars.teams.BedwarsTeam;
 import fr.trytoon.bedwars.teams.TeamManager;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -22,21 +16,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class TeamSelectorInventory implements BedwarsInventory {
-    TeamManager teamManager;
-    Inventory teamSelectorInventory;
+public class TeamSelectorInventory extends AbstractBedwarsInventory implements Listener {
+    private final TeamManager teamManager;
 
     Map<Integer, BedwarsTeam> integerTeamMap;
 
     public TeamSelectorInventory(TeamManager teamManager) {
+        super("Choisissez votre equipe!", 9);
         this.teamManager = teamManager;
-        this.teamSelectorInventory = createInventory();
+        this.integerTeamMap = new HashMap<>();
+
+        createInventory();
     }
 
-    public Inventory createInventory() {
-        integerTeamMap = new HashMap<>();
-        Inventory inventory = Bukkit.createInventory(null, 9, "Choisissez votre equipe!");
+    @Override
+    public void createInventory() {
+        refreshInventory();
+    }
 
+    @Override
+    public void refreshInventory() {
         int i = 0;
         for (BedwarsTeam t : teamManager.getTeams().values()) {
             ItemStack item = createSelectorObjectForTeam(t);
@@ -46,9 +45,24 @@ public class TeamSelectorInventory implements BedwarsInventory {
             inventory.setItem(i, item);
             i++;
         }
-
-        return inventory;
     }
+
+    @Override
+    public void handleClick(BedwarsPlayer bedwarsPlayer, int slot, ItemStack item, Inventory inventory) {
+        if (inventory.equals(getInventory())) {
+            if (item != null && item.hasItemMeta()) {
+
+                BedwarsTeam currentBedwarsTeam = bedwarsPlayer.getTeam();
+                BedwarsTeam newBedwarsTeam = integerTeamMap.get(slot);
+
+                if (newBedwarsTeam != null) {
+                    PlayerTeamChangeEvent playerTeamChangeEvent = new PlayerTeamChangeEvent(bedwarsPlayer, currentBedwarsTeam, newBedwarsTeam);
+                    Bukkit.getServer().getPluginManager().callEvent(playerTeamChangeEvent);
+                }
+            }
+        }
+    }
+
     public ItemStack createSelectorObjectForTeam(BedwarsTeam bedwarsTeam) {
         ItemStack item = bedwarsTeam.getTeamColor().getWool();
         ItemMeta meta = item.getItemMeta();
@@ -64,28 +78,6 @@ public class TeamSelectorInventory implements BedwarsInventory {
         return item;
     }
 
-    public void updateTeamItem(int index) {
-        if (index > teamSelectorInventory.getSize()) {
-            return;
-        }
-
-        ItemStack item = teamSelectorInventory.getItem(index);
-        if (item != null) {
-            BedwarsTeam bedwarsTeam = integerTeamMap.get(index);
-            List<String> lore = createItemLore(bedwarsTeam);
-
-            ItemMeta meta = item.getItemMeta();
-            if (meta != null) {
-                meta.setLore(lore);
-
-                String title = createItemTitle(bedwarsTeam);
-                meta.setDisplayName(title);
-
-                item.setItemMeta(meta);
-            }
-        }
-    }
-
     public List<String> createItemLore(BedwarsTeam bedwarsTeam) {
         ChatColor teamChatColor = bedwarsTeam.getTeamColor().getChatColor();
 
@@ -93,8 +85,8 @@ public class TeamSelectorInventory implements BedwarsInventory {
         lore.add("");
 
         int i = 0;
-        for (Player player : bedwarsTeam.getPlayers()) {
-            lore.add(ChatColor.GRAY +">> " + teamChatColor + player.getName());
+        for (BedwarsPlayer bedwarsPlayer : bedwarsTeam.getPlayers()) {
+            lore.add(ChatColor.GRAY +">> " + teamChatColor + bedwarsPlayer.getPlayer().getName());
             i++;
         }
 
@@ -112,67 +104,4 @@ public class TeamSelectorInventory implements BedwarsInventory {
         ChatColor teamChatColor = bedwarsTeam.getTeamColor().getChatColor();
         return teamChatColor + "Equipe " + bedwarsTeam.getName() + ChatColor.GRAY +" (" + bedwarsTeam.getPlayersCount() + "/" + bedwarsTeam.getMaxMembers() +")";
     }
-
-
-    @EventHandler
-    public void onPlayerAdded(PlayerTeamJoinEvent event) {
-        for (int index : integerTeamMap.keySet()) {
-            updateTeamItem(index);
-        }
-    }
-
-    @EventHandler
-    public void onTeamCreated(TeamCreatedEvent event) {
-        this.teamSelectorInventory = createInventory();
-    }
-
-    @EventHandler
-    public void onTeamRemoved(TeamRemovedEvent event) {
-        this.teamSelectorInventory = createInventory();
-    }
-
-    @Override
-    @EventHandler
-    public void handleInventoryClick(InventoryClickEvent event) {
-        Inventory inv = event.getInventory();
-        Player player = (Player) event.getWhoClicked();
-        ItemStack item = event.getCurrentItem();
-
-        if (inv.equals(this.teamSelectorInventory)) {
-            event.setCancelled(true);
-
-            if (item != null && item.hasItemMeta()) {
-
-                BedwarsTeam bedwarsTeam = this.getTeamFromIndex(event.getSlot());
-
-                if (bedwarsTeam != null) {
-                    PlayerTeamSelectEvent joinEvent = new PlayerTeamSelectEvent(player, bedwarsTeam.getName());
-                    Bukkit.getServer().getPluginManager().callEvent(joinEvent);
-                }
-            }
-        }
-    }
-
-    @Override
-    @EventHandler
-    public void handlePlayerInteract(PlayerInteractEvent event) {
-        Player player = event.getPlayer();
-
-        if (player != null) {
-            ItemStack it = event.getItem();
-
-            if (it != null && it.getType() == Material.DIRT) {
-                openInventory(player);
-            }
-        }
-    }
-
-    public Inventory getInventory() {
-        return this.teamSelectorInventory;
-    }
-
-    public BedwarsTeam getTeamFromIndex(int i) {
-        return integerTeamMap.get(i);
-    }
 }
-

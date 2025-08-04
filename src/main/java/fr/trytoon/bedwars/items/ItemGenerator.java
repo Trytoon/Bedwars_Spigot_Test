@@ -21,7 +21,7 @@ public class ItemGenerator {
     }
 
     public void tick() {
-        tick += 1;
+        tick++;
 
         if (tick == spawnDelay) {
             spawnItem();

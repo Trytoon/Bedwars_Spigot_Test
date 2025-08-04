@@ -5,13 +5,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
-public class BedBrokenEvent extends Event {
+public class TeamBedBrokenEvent extends Event {
     private static final HandlerList handlers = new HandlerList();
     private final BedwarsTeam bedwarsTeam;
 
     private final Player breaker;
 
-    public BedBrokenEvent(BedwarsTeam bedwarsTeam, Player breaker) {
+    public TeamBedBrokenEvent(BedwarsTeam bedwarsTeam, Player breaker) {
         this.bedwarsTeam = bedwarsTeam;
         this.breaker = breaker;
     }

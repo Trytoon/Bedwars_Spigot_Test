@@ -6,6 +6,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class BedwarsItem {
 
@@ -19,8 +20,16 @@ public class BedwarsItem {
 
     public static BedwarsItem BRONZE = new BedwarsItem(
             Material.CLAY_BRICK,
+            "bronze",
             "Bronze",
-            "Bronze",
+            null,
+            1
+    );
+
+    public static BedwarsItem TEAM_SELECTOR = new BedwarsItem(
+            Material.COMPASS,
+            "team-selector",
+            "Selection d'équipes",
             null,
             1
     );
@@ -62,30 +71,28 @@ public class BedwarsItem {
     }
 
     public static boolean isBedwarsItem(ItemStack item, String expectedId) {
-        if (item == null) return false;
-
-        final boolean[] match = {false};
+        AtomicReference<Boolean> match = new AtomicReference<>(false);
 
         NBT.modify(item, nbt -> {
             if (nbt.hasTag("bedwars-id")) {
-                match[0] = expectedId.equals(nbt.getString("bedwars-id"));
+                match.set(expectedId.equals(nbt.getString("bedwars-id")));
             }
         });
 
-        return match[0];
+        return match.get();
     }
 
     public static String getCustomId(ItemStack item) {
         if (item == null) return null;
 
-        final String[] id = {null};
+        AtomicReference<String> id = new AtomicReference<>(null);
 
         NBT.modify(item, nbt -> {
             if (nbt.hasTag("bedwars-id")) {
-                id[0] = nbt.getString("bedwars-id");
+                id.set(nbt.getString("bedwars-id"));
             }
         });
 
-        return id[0];
+        return id.get();
     }
 }

@@ -31,11 +31,11 @@ public class GameManager {
         return placedBlocks.contains(block);
     }
 
-    public boolean removePlacedBlock(Block block) {
+    public boolean removePlacedBlockByPlayer(Block block) {
         return placedBlocks.remove(block);
     }
 
-    public void addPlacedBlock(Block block) {
+    public void addPlacedBlockByPlayer(Block block) {
         if (!isBlockPlaced(block)) {
             placedBlocks.add(block);
         }

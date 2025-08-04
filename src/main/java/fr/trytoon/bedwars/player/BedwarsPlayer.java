@@ -2,7 +2,6 @@ package fr.trytoon.bedwars.player;
 
 import fr.trytoon.bedwars.teams.BedwarsTeam;
 import org.bukkit.entity.Player;
-import org.bukkit.scoreboard.Team;
 
 public class BedwarsPlayer {
 
@@ -20,32 +19,20 @@ public class BedwarsPlayer {
         bedDestroyed = 0;
     }
 
+    public void incrementDeaths() {
+        this.deaths += 1;
+    }
+
     public Player getPlayer() {
         return player;
-    }
-
-    public int getDeaths() {
-        return deaths;
-    }
-
-    public void setDeaths(int deaths) {
-        this.deaths = deaths;
     }
 
     public int getKills() {
         return kills;
     }
 
-    public void setKills(int kills) {
-        this.kills = kills;
-    }
-
     public int getBedDestroyed() {
         return bedDestroyed;
-    }
-
-    public void setBedDestroyed(int bedDestroyed) {
-        this.bedDestroyed = bedDestroyed;
     }
 
     public BedwarsTeam getTeam() {

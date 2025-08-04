@@ -1,50 +1,48 @@
 package fr.trytoon.bedwars.commands;
 
-import fr.trytoon.bedwars.BedwarsConstants;
-import fr.trytoon.bedwars.BedwarsPlugin;
-import fr.trytoon.bedwars.events.GameStartedEvent;
+import fr.trytoon.bedwars.events.GameStatusChangeEvent;
 import fr.trytoon.bedwars.game.GameManager;
 import fr.trytoon.bedwars.game.GameState;
-import fr.trytoon.bedwars.teams.BedwarsTeam;
-import fr.trytoon.bedwars.teams.TeamManager;
+import fr.trytoon.bedwars.items.GeneratorManager;
+import fr.trytoon.bedwars.player.BedwarsPlayer;
+import fr.trytoon.bedwars.player.PlayerManager;
 import org.bukkit.Bukkit;
-import org.bukkit.World;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 public class StartCommand implements CommandExecutor {
 
-    BedwarsPlugin plugin;
+    private final GameManager gameManager;
+    private final PlayerManager playerManager;
+    private final GeneratorManager generatorManager;
 
-    public StartCommand(BedwarsPlugin plugin) {
-        this.plugin = plugin;
+    public StartCommand(GameManager gameManager, PlayerManager playerManager, GeneratorManager generatorManager) {
+        this.gameManager = gameManager;
+        this.playerManager = playerManager;
+        this.generatorManager = generatorManager;
     }
 
     @Override
     public boolean execute(CommandSender sender, String[] args) {
-        TeamManager teamManager = plugin.getTeamManager();
-        GameManager gameManager = plugin.getGameManager();
+        GameState currentGameState = gameManager.getCurrentGameState();
+        GameState nextGameState =GameState.PLAYING;
 
-        World world = plugin.getServer().getWorld(BedwarsConstants.TEST_WORLD);
-        if (world == null) {
-            return false;
-        }
-
-        gameManager.setCurrentGameState(GameState.PLAYING);
+        gameManager.setCurrentGameState(nextGameState);
 
         for (Player player : Bukkit.getOnlinePlayers()) {
-            if (player.getWorld().equals(world)) {
-                BedwarsTeam playerBedwarsTeam = teamManager.getPlayerTeam(player);
-                if (playerBedwarsTeam != null) {
-                    player.teleport(playerBedwarsTeam.getSpawn());
+            BedwarsPlayer bedwarsPlayer =  playerManager.getBedwarsPlayer(player);
+
+            if (bedwarsPlayer != null) {
+                if (bedwarsPlayer.getTeam() != null) {
+                    player.teleport(bedwarsPlayer.getTeam().getSpawn());
                 }
             }
         }
 
-        plugin.getGeneratorManager().run();
+        generatorManager.run();
 
-        GameStartedEvent gameStartedEvent = new GameStartedEvent();
-        Bukkit.getServer().getPluginManager().callEvent(gameStartedEvent);
+        GameStatusChangeEvent event = new GameStatusChangeEvent(currentGameState, nextGameState);
+        Bukkit.getServer().getPluginManager().callEvent(event);
 
         return true;
     }

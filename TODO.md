@@ -31,3 +31,6 @@ Can get inspiration from: https://github.com/andrei1058/BedWars1058-TeamSelector
 
 # Sound design
 - add sound design
+
+# events
+- changer tous les events qui conteint des players par des BedwarsPlayer

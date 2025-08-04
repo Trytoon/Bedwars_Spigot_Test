@@ -1,29 +1,15 @@
 package fr.trytoon.bedwars.teams;
 
-import com.connorlinfoot.titleapi.TitleAPI;
 import fr.trytoon.bedwars.BedwarsConstants;
 import fr.trytoon.bedwars.BedwarsPlugin;
-import fr.trytoon.bedwars.events.BedBrokenEvent;
-import fr.trytoon.bedwars.events.PlayerTeamJoinEvent;
-import fr.trytoon.bedwars.events.PlayerTeamSelectEvent;
-import fr.trytoon.bedwars.game.GameState;
 import fr.trytoon.bedwars.player.BedwarsPlayer;
-import fr.trytoon.bedwars.player.PlayerManager;
-import fr.trytoon.bedwars.scoreboard.BedwarsScoreboardManager;
-import org.bukkit.*;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.material.Bed;
-import org.bukkit.scoreboard.ScoreboardManager;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -31,17 +17,16 @@ import java.util.Map;
 
 import static org.bukkit.Bukkit.getServer;
 
-public class TeamManager implements Listener {
+public class TeamManager {
 
     BedwarsPlugin plugin;
 
     Map<String, BedwarsTeam> teams = new HashMap<>();
 
-
     public TeamManager(BedwarsPlugin plugin) {
         this.plugin = plugin;
+        loadTeams();
     }
-
 
     public void loadTeams() {
         FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(BedwarsConstants.TEAM_FILE_PATH);
@@ -72,52 +57,15 @@ public class TeamManager implements Listener {
         }
     }
 
-    public BedwarsTeam getTeam(String key) {
-        return teams.get(key);
-    }
+    public void addPlayerToTeam(BedwarsTeam bedwarsTeam, BedwarsPlayer bedwarsPlayer) {
+        Player player = bedwarsPlayer.getPlayer();
 
-    public Map<String, BedwarsTeam> getTeams() {
-        return this.teams;
-    }
-
-    public BedwarsTeam getPlayerTeam(Player player) {
-        BedwarsPlayer bedwarsPlayer = plugin.getPlayerManager().getBedwarsPlayer(player);
-
-        if (bedwarsPlayer != null) {
-            return bedwarsPlayer.getTeam();
-        }
-        else {
-            for (BedwarsTeam bedwarsTeam : teams.values()) {
-                if (bedwarsTeam.getPlayers().contains(player)) {
-                    return bedwarsTeam;
-                }
-            }
-        }
-
-        return null;
-    }
-
-    public void addPlayer(String teamName, Player player) {
-        BedwarsTeam bedwarsTeam = teams.get(teamName);
-        if (bedwarsTeam != null) {
-
-            if (getPlayerTeam(player) != null) {
-                removePlayer(getPlayerTeam(player).getName(), player);
-            }
+        if (bedwarsTeam != null && player != null) {
+            String teamName = bedwarsTeam.getName();
 
             if (bedwarsTeam.getPlayersCount() < bedwarsTeam.getMaxMembers()) {
-                bedwarsTeam.addToTeam(player);
-
-                PlayerTeamJoinEvent teamJoinEvent = new PlayerTeamJoinEvent(player, bedwarsTeam);
-                Bukkit.getServer().getPluginManager().callEvent(teamJoinEvent);
-
-                plugin.getPlayerManager().createBedwarsPlayer(player);
-
-                BedwarsPlayer bedwarsPlayer = plugin.getPlayerManager().getBedwarsPlayer(player);
-                if (bedwarsPlayer != null) {
-                    bedwarsPlayer.setTeam(bedwarsTeam);
-                }
-
+                bedwarsTeam.addToTeam(bedwarsPlayer);
+                bedwarsPlayer.setTeam(bedwarsTeam);
 
                 player.sendMessage("Vous avez officiellement rejoint la team: " + teamName);
             }
@@ -127,23 +75,12 @@ public class TeamManager implements Listener {
         }
     }
 
-    public void removePlayer(String teamName, Player player) {
-        BedwarsTeam bedwarsTeam = teams.get(teamName);
-        if (bedwarsTeam != null) {
-            if (bedwarsTeam.hasPlayer(player)) {
-                bedwarsTeam.removeFromTeam(player);
-
-            }
+    public void removePlayerFromTeam(BedwarsTeam team, BedwarsPlayer player) {
+        if (team.hasPlayer(player)) {
+            team.removeFromTeam(player);
         }
     }
 
-    @EventHandler
-    public void onTeamJoin(PlayerTeamSelectEvent event) {
-        String teamName = event.getTeamName();
-        Player player = event.getPlayer();
-
-        addPlayer(teamName, player);
-    }
 
     public boolean deleteTeam(String teamName) {
         FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(BedwarsConstants.TEAM_FILE_PATH);
@@ -194,7 +131,6 @@ public class TeamManager implements Listener {
     }
 
 
-    //todo get blockstate for bed to break both parts
     public BedwarsTeam findTeamByBed(Location location) {
         for (BedwarsTeam team : teams.values()) {
             if (team.getBedPosition().equals(location) || location.equals(findOtherBedPartLocation(team.getBedPosition()))) {
@@ -207,86 +143,35 @@ public class TeamManager implements Listener {
 
     public Location findOtherBedPartLocation(Location bedHeadLocation) {
         Block block = bedHeadLocation.getBlock();
-        if (block.getType() == Material.BED || block.getType() == Material.BED_BLOCK) {
-            Bed bed = (Bed) block.getState().getData();
-            BlockFace facing = bed.getFacing();
 
-
-            Location otherPartLocation = bedHeadLocation.clone();
-
-            boolean isHead = bed.isHeadOfBed();
-
-            switch (facing) {
-                case NORTH:
-                    if (isHead) {
-                        otherPartLocation.add(0, 0, 1);
-                    } else {
-                        otherPartLocation.add(0, 0, -1);
-                    }
-                    break;
-                case SOUTH:
-                    if (isHead) {
-                        otherPartLocation.add(0, 0, -1);
-                    } else {
-                        otherPartLocation.add(0, 0, 1);
-                    }
-                    break;
-                case EAST:
-                    if (isHead) {
-                        otherPartLocation.add(-1, 0, 0);
-                    } else {
-                        otherPartLocation.add(1, 0, 0);
-                    }
-                    break;
-                case WEST:
-                    if (isHead) {
-                        otherPartLocation.add(1, 0, 0);
-                    } else {
-                        otherPartLocation.add(-1, 0, 0);
-                    }
-                    break;
-                default:
-                    return bedHeadLocation;
-            }
-            return otherPartLocation;
+        if (block.getType() != Material.BED_BLOCK) {
+            return bedHeadLocation;
         }
 
-        return bedHeadLocation;
+        Bed bed = (Bed) block.getState().getData();
+        BlockFace facing = bed.getFacing();
+        boolean isHead = bed.isHeadOfBed();
+
+        Location otherPartLocation = bedHeadLocation.clone();
+        int dx = 0, dz = 0;
+
+        switch (facing) {
+            case NORTH: dz = isHead ? 1 : -1; break;
+            case SOUTH: dz = isHead ? -1 : 1; break;
+            case EAST:  dx = isHead ? -1 : 1; break;
+            case WEST:  dx = isHead ? 1 : -1; break;
+            default: return bedHeadLocation;
+        }
+
+        otherPartLocation.add(dx, 0, dz);
+        return otherPartLocation;
     }
 
-
-
-
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        if (plugin.getGameManager() != null && plugin.getGameManager().getCurrentGameState() == GameState.WAITING_FOR_PLAYER) {
-            Player player = event.getPlayer();
-
-            BedwarsTeam playerTeam = getPlayerTeam(player);
-            if (playerTeam != null) {
-                removePlayer(playerTeam.getName(), player);
-
-                PlayerTeamJoinEvent teamJoinEvent = new PlayerTeamJoinEvent(player, null);
-                Bukkit.getServer().getPluginManager().callEvent(teamJoinEvent);
-            }
-        }
+    public Map<String, BedwarsTeam> getTeams() {
+        return teams;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onBedBroken(BedBrokenEvent event) {
-        BedwarsTeam team = event.getTeam();
-
-        team.setBedBroken(true);
-        ChatColor color = team.getTeamColor().getChatColor();
-        Bukkit.broadcastMessage("The bed of team "
-                + color + team.getName()
-                + ChatColor.WHITE
-                + " was broken by "
-                + event.getBreaker().getName());
-
-        for (Player player : getTeam(team.getName()).getPlayers()) {
-            player.playSound(player.getLocation(), Sound.ENDERDRAGON_GROWL, 1.0f, 1.0f);
-            TitleAPI.sendTitle(player, 10,20,30, "Your Bed was broken.", "");
-        }
+    public BedwarsTeam getTeamByName(String name) {
+        return teams.get(name);
     }
 }
