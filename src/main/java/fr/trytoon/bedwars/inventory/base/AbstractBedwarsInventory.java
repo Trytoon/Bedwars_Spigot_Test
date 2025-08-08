@@ -1,4 +1,4 @@
-package fr.trytoon.bedwars.inventory;
+package fr.trytoon.bedwars.inventory.base;
 
 import fr.trytoon.bedwars.player.BedwarsPlayer;
 import org.bukkit.Bukkit;
@@ -9,8 +9,12 @@ import org.bukkit.inventory.ItemStack;
 public abstract class AbstractBedwarsInventory {
 
     protected Inventory inventory;
-    protected final String title;
-    protected final int size;
+    protected String title;
+    protected int size;
+
+    public AbstractBedwarsInventory() {
+
+    }
 
     public AbstractBedwarsInventory(String title, int size) {
         this.title = title;
@@ -27,7 +31,9 @@ public abstract class AbstractBedwarsInventory {
     }
 
     public void open(Player player) {
-        player.openInventory(inventory);
+        if (inventory != null) {
+            player.openInventory(inventory);
+        }
     }
 
     public Inventory getInventory() {

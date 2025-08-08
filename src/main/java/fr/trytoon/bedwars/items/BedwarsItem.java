@@ -6,7 +6,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class BedwarsItem {
 
@@ -30,6 +29,14 @@ public class BedwarsItem {
             Material.COMPASS,
             "team-selector",
             "Selection d'équipes",
+            null,
+            1
+    );
+
+    public static BedwarsItem SHOP_TEST = new BedwarsItem(
+            Material.COMPASS,
+            "shop-test",
+            "Ouvrir le shop",
             null,
             1
     );
@@ -68,31 +75,5 @@ public class BedwarsItem {
         }
 
         return item;
-    }
-
-    public static boolean isBedwarsItem(ItemStack item, String expectedId) {
-        AtomicReference<Boolean> match = new AtomicReference<>(false);
-
-        NBT.modify(item, nbt -> {
-            if (nbt.hasTag("bedwars-id")) {
-                match.set(expectedId.equals(nbt.getString("bedwars-id")));
-            }
-        });
-
-        return match.get();
-    }
-
-    public static String getCustomId(ItemStack item) {
-        if (item == null) return null;
-
-        AtomicReference<String> id = new AtomicReference<>(null);
-
-        NBT.modify(item, nbt -> {
-            if (nbt.hasTag("bedwars-id")) {
-                id.set(nbt.getString("bedwars-id"));
-            }
-        });
-
-        return id.get();
     }
 }

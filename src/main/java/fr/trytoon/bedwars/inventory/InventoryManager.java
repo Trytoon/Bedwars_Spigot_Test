@@ -1,6 +1,7 @@
 package fr.trytoon.bedwars.inventory;
 
 import fr.trytoon.bedwars.BedwarsPlugin;
+import fr.trytoon.bedwars.inventory.base.AbstractBedwarsInventory;
 import fr.trytoon.bedwars.player.BedwarsPlayer;
 import org.bukkit.event.Listener;
 

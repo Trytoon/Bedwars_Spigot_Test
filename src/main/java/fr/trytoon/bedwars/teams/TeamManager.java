@@ -19,9 +19,11 @@ import static org.bukkit.Bukkit.getServer;
 
 public class TeamManager {
 
-    BedwarsPlugin plugin;
+    private static final String TEAM_FILE_PATH = "teams.yml";
 
-    Map<String, BedwarsTeam> teams = new HashMap<>();
+    private final BedwarsPlugin plugin;
+
+    private final Map<String, BedwarsTeam> teams = new HashMap<>();
 
     public TeamManager(BedwarsPlugin plugin) {
         this.plugin = plugin;
@@ -29,7 +31,7 @@ public class TeamManager {
     }
 
     public void loadTeams() {
-        FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(BedwarsConstants.TEAM_FILE_PATH);
+        FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(TEAM_FILE_PATH);
 
         for (String teamName : teamsConfig.getKeys(false)) {
             int players = teamsConfig.getInt(teamName + ".players");
@@ -83,7 +85,7 @@ public class TeamManager {
 
 
     public boolean deleteTeam(String teamName) {
-        FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(BedwarsConstants.TEAM_FILE_PATH);
+        FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(TEAM_FILE_PATH);
 
         if (teamsConfig != null) {
 
@@ -91,7 +93,7 @@ public class TeamManager {
                 teamsConfig.set(teamName, null);
 
                 try {
-                    teamsConfig.save(plugin.getConfigurationFileFromPath(BedwarsConstants.TEAM_FILE_PATH));
+                    teamsConfig.save(plugin.getConfigurationFileFromPath(TEAM_FILE_PATH));
                 } catch (IOException e) {
                    return false;
                 }
@@ -106,7 +108,7 @@ public class TeamManager {
     }
 
     public boolean createTeam(String name, int members, Location spawnLocation) {
-        FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(BedwarsConstants.TEAM_FILE_PATH);
+        FileConfiguration teamsConfig = plugin.getYAMLConfigurationFromPath(TEAM_FILE_PATH);
 
         String teamName = name;
         teamsConfig.set(teamName + ".players", members);
@@ -119,7 +121,7 @@ public class TeamManager {
         teamsConfig.set(teamName + ".color", "white");
 
         try {
-            teamsConfig.save(plugin.getConfigurationFileFromPath(BedwarsConstants.TEAM_FILE_PATH));
+            teamsConfig.save(plugin.getConfigurationFileFromPath(TEAM_FILE_PATH));
         } catch (IOException e) {
             return false;
         }

@@ -9,6 +9,8 @@ import fr.trytoon.bedwars.player.PlayerManager;
 import fr.trytoon.bedwars.player.PlayerRespawnManager;
 import fr.trytoon.bedwars.teams.TeamManager;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -66,7 +68,16 @@ public class PlayerListener implements Listener {
     public void onPlayerJoin(PlayerJoinEvent event) {
         if (gameManager != null && gameManager.getCurrentGameState() == GameState.WAITING_FOR_PLAYER) {
             Player player = event.getPlayer();
+
+            player.getInventory().clear();
             player.getInventory().setItem(8, BedwarsItem.TEAM_SELECTOR.toItemStack());
+            player.getInventory().setItem(0, BedwarsItem.SHOP_TEST.toItemStack());
+
+            Location spawnLocation = player.getWorld().getSpawnLocation();
+            player.teleport(spawnLocation);
+
+            player.setGameMode(GameMode.ADVENTURE);
+
             playerManager.createBedwarsPlayer(player);
         }
     }

@@ -8,3 +8,6 @@ commands:
   team:
     description: Create or add a team. Can also get all teams.
     usage: /team <add|list|remove>
+  nbt:
+    description: Debug command to get NBT from an ItemStack
+    usage: /nbt

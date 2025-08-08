@@ -1,6 +1,7 @@
 package fr.trytoon.bedwars.inventory;
 
 import fr.trytoon.bedwars.events.PlayerTeamChangeEvent;
+import fr.trytoon.bedwars.inventory.base.AbstractBedwarsInventory;
 import fr.trytoon.bedwars.player.BedwarsPlayer;
 import fr.trytoon.bedwars.teams.BedwarsTeam;
 import fr.trytoon.bedwars.teams.TeamManager;

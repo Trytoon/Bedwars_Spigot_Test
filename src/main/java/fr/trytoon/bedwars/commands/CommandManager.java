@@ -22,6 +22,7 @@ public class CommandManager {
     public void registerCommands() {
         commandMap.put("start", new StartCommand(plugin.getGameManager(), plugin.getPlayerManager(), plugin.getGeneratorManager()));
         commandMap.put("team", new TeamCommand(plugin.getTeamManager()));
+        commandMap.put("nbt", new NbtCommand());
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {

@@ -7,6 +7,7 @@ import fr.trytoon.bedwars.items.GeneratorManager;
 import fr.trytoon.bedwars.player.BedwarsPlayer;
 import fr.trytoon.bedwars.player.PlayerManager;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -34,7 +35,9 @@ public class StartCommand implements CommandExecutor {
 
             if (bedwarsPlayer != null) {
                 if (bedwarsPlayer.getTeam() != null) {
+                    player.getInventory().clear();
                     player.teleport(bedwarsPlayer.getTeam().getSpawn());
+                    player.setGameMode(GameMode.SURVIVAL);
                 }
             }
         }
